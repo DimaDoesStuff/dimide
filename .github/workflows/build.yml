@@ -1,32 +1,27 @@
 name: Build DimIDE macOS
-
 on:
   push:
     branches: [master, main]
   workflow_dispatch:
-
 jobs:
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build DimIDE
         run: npm run gulp vscode-darwin-x64
-
       - name: Create DMG
         run: npm run gulp vscode-darwin-x64-build-dmg
         continue-on-error: true
-
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
