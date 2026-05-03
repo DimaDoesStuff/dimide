@@ -1,0 +1,67 @@
+name: Build DimIDE
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  # Windows Build
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build DimIDE (Windows x64)
+        run: npm run gulp vscode-win32-x64
+      
+      - name: Build Installer
+        run: |
+          npm run gulp vscode-win32-x64-inno-updater
+          npm run gulp vscode-win32-x64-system-setup
+      
+      - name: Upload Windows Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: DimIDE-Windows-x64-Setup
+          path: .build/win32-x64/system-setup/*.exe
+
+  # macOS Build (Apple Silicon - for your Mac)
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build DimIDE (macOS ARM64)
+        run: npm run gulp vscode-darwin-arm64
+      
+      - name: Create DMG
+        run: npm run gulp vscode-darwin-arm64-build-dmg
+        continue-on-error: true
+      
+      - name: Upload macOS App
+        uses: actions/upload-artifact@v4
+        with:
+          name: DimIDE-macOS-ARM64
+          path: |
+            ../VSCode-darwin-arm64/
+            .build/darwin/arm64/*.dmg
