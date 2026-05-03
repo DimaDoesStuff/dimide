@@ -1,0 +1,87 @@
+# GitLab CI for DimIDE - Builds Windows, macOS, and Linux
+# Uses GitLab shared runners
+
+stages:
+  - build
+  - package
+
+variables:
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+# Windows Build (x64)
+build-windows:
+  stage: build
+  tags:
+    - windows
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run gulp vscode-win32-x64
+  artifacts:
+    paths:
+      - ../VSCode-win32-x64/
+    expire_in: 1 week
+
+# macOS Build (Apple Silicon ARM64) - for your Mac
+build-macos-arm64:
+  stage: build
+  tags:
+    - macos
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run gulp vscode-darwin-arm64
+  artifacts:
+    paths:
+      - ../VSCode-darwin-arm64/
+    expire_in: 1 week
+
+# macOS Build (Intel x64)
+build-macos-x64:
+  stage: build
+  tags:
+    - macos
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run gulp vscode-darwin-x64
+  artifacts:
+    paths:
+      - ../VSCode-darwin-x64/
+    expire_in: 1 week
+
+# Create macOS DMG (ARM64) - The .pkg/.dmg for your Mac
+package-macos-dmg:
+  stage: package
+  tags:
+    - macos
+  dependencies:
+    - build-macos-arm64
+  script:
+    - npm run gulp vscode-darwin-arm64-build-dmg
+  artifacts:
+    paths:
+      - .build/darwin/arm64/
+    expire_in: 1 month
+    name: "DimIDE-macOS-ARM64"
+  only:
+    - tags
+    - master
+
+# Create Windows Installer
+package-windows-installer:
+  stage: package
+  tags:
+    - windows
+  dependencies:
+    - build-windows
+  script:
+    - npm run gulp vscode-win32-x64-inno-updater
+    - npm run gulp vscode-win32-x64-system-setup
+  artifacts:
+    paths:
+      - .build/win32-x64/system-setup/*.exe
+    expire_in: 1 month
+    name: "DimIDE-Windows-x64-Setup"
+  only:
+    - tags
+    - master
