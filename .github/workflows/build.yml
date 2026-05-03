@@ -25,10 +25,14 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install
+          npx playwright install-deps 2>/dev/null || true
 
       - name: Build DimIDE (macOS ARM64)
-        run: npm run gulp vscode-darwin-arm64
+        run: |
+          export npm_config_arch=arm64
+          npm run gulp vscode-darwin-arm64-ci
         timeout-minutes: 90
 
       - name: Create DMG
