@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  # macOS Build (Apple Silicon - for your Mac) with DMG
+  # macOS Build (Intel x64 - for 2019 MacBook Air) with DMG
   build-macos-dmg:
-    runs-on: macos-latest
+    runs-on: macos-13  # Intel runner
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -29,23 +29,23 @@ jobs:
           npm install
           npx playwright install-deps 2>/dev/null || true
 
-      - name: Build DimIDE (macOS ARM64)
+      - name: Build DimIDE (macOS x64 Intel)
         run: |
-          export npm_config_arch=arm64
-          npm run gulp vscode-darwin-arm64-ci
+          export npm_config_arch=x64
+          npm run gulp vscode-darwin-x64-ci
         timeout-minutes: 90
 
       - name: Create DMG
-        run: npm run gulp vscode-darwin-arm64-build-dmg
+        run: npm run gulp vscode-darwin-x64-build-dmg
         continue-on-error: true
         timeout-minutes: 30
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: DimIDE-macOS-ARM64-DMG
+          name: DimIDE-macOS-Intel-x64-DMG
           path: |
-            .build/darwin/arm64/*.dmg
-            ../VSCode-darwin-arm64/
+            .build/darwin/x64/*.dmg
+            ../VSCode-darwin-x64/
           if-no-files-found: warn
           retention-days: 7
