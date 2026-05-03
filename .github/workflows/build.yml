@@ -21,14 +21,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build DimIDE
         run: npm run gulp vscode-darwin-x64
+      - name: Install create-dmg
+        run: brew install create-dmg
       - name: Create DMG
-        run: npm run gulp vscode-darwin-x64-build-dmg
+        run: |
+          create-dmg \
+            --volname "DimIDE" \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "DimIDE.dmg" \
+            "../VSCode-darwin-x64/DimIDE.app"
         continue-on-error: true
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
           name: DimIDE-macOS-x64-DMG
-          path: |
-            .build/darwin/x64/*.dmg
-            ../VSCode-darwin-x64/
+          path: "*.dmg"
           if-no-files-found: warn
