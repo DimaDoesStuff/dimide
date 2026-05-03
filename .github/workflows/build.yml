@@ -9,6 +9,7 @@ jobs:
   # macOS Build (Apple Silicon - for your Mac) with DMG
   build-macos-dmg:
     runs-on: macos-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -18,15 +19,22 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build DimIDE (macOS ARM64)
         run: npm run gulp vscode-darwin-arm64
+        timeout-minutes: 90
 
       - name: Create DMG
         run: npm run gulp vscode-darwin-arm64-build-dmg
         continue-on-error: true
+        timeout-minutes: 30
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
@@ -36,3 +44,4 @@ jobs:
             .build/darwin/arm64/*.dmg
             ../VSCode-darwin-arm64/
           if-no-files-found: warn
+          retention-days: 7
