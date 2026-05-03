@@ -1,4 +1,4 @@
-name: Build DimIDE macOS DMG
+name: Build DimIDE macOS
 
 on:
   push:
@@ -6,10 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  # macOS Build (Intel x64 - for 2019 MacBook Air) with DMG
-  build-macos-dmg:
-    runs-on: macos-13  # Intel runner
-    timeout-minutes: 120
+  build-macos:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -19,33 +17,21 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Install dependencies
-        run: |
-          npm install
-          npx playwright install-deps 2>/dev/null || true
+        run: npm ci
 
-      - name: Build DimIDE (macOS x64 Intel)
-        run: |
-          export npm_config_arch=x64
-          npm run gulp vscode-darwin-x64-ci
-        timeout-minutes: 90
+      - name: Build DimIDE
+        run: npm run gulp vscode-darwin-x64
 
       - name: Create DMG
         run: npm run gulp vscode-darwin-x64-build-dmg
         continue-on-error: true
-        timeout-minutes: 30
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: DimIDE-macOS-Intel-x64-DMG
+          name: DimIDE-macOS-x64-DMG
           path: |
             .build/darwin/x64/*.dmg
             ../VSCode-darwin-x64/
           if-no-files-found: warn
-          retention-days: 7
